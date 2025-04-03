@@ -1,25 +1,34 @@
 # ai_helper.py
-
 import sys
-from gpt4all import GPT4All
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 ai_helper.py \"your question here\"")
+        print("Usage: python3 ai_helper.py \"Your question here\"")
         sys.exit(1)
 
-    prompt = " ".join(sys.argv[1:])
-    print("🧠 Running local LLM...\n")
+    question = " ".join(sys.argv[1:])
+    print("🧠 Loading FLAN-T5 model...")
 
-    # Load model 
-    model = GPT4All("mistral-7b-openorca.Q4_0.gguf", model_path="./models")
+    try:
+        # Load tokenizer and model
+        tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
+        model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
 
-    # Start a session and get the response
-    with model.chat_session() as session:
-        response = session.generate(prompt)
+        # Prepare the prompt
+        prompt = f"Answer the following question: {question}"
+        input_ids = tokenizer(prompt, return_tensors="pt").input_ids
 
-    print("\n💡 Response:\n")
-    print(response.strip())
+        # Generate a response
+        output_ids = model.generate(input_ids, max_new_tokens=128)
+        response = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+
+        print("\n🤖 AI Response:\n")
+        print(response)
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
