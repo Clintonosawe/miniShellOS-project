@@ -1,1 +1,1 @@
-# miniShellOS-project
+miniShellOS
